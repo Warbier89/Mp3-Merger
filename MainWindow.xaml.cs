@@ -1,5 +1,5 @@
 ﻿using NAudio.Wave; // Für Mp3FileReader und WaveFormat
-using NAudio.Lame; // NEU: Für LameMP3FileWriter
+using NAudio.Lame; // Für LameMP3FileWriter
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,8 +12,7 @@ using System.ComponentModel; // Für INotifyPropertyChanged
 using System.Windows.Media; // Für Farben im UI
 using Microsoft.WindowsAPICodePack.Dialogs; // Für CommonOpenFileDialog
 
-// WICHTIG: Stelle sicher, dass dieser Namespace GENAU deinem Projektnamen entspricht (z.B. "Mp3_Merger")
-namespace Mp3_Merger // Bitte hier den korrekten Namespace deines Projekts eintragen!
+namespace Mp3_Merger
 {
     public partial class MainWindow : Window
     {
@@ -121,9 +120,6 @@ namespace Mp3_Merger // Bitte hier den korrekten Namespace deines Projekts eintr
             using (var dialog = new CommonOpenFileDialog())
             {
                 dialog.IsFolderPicker = true;
-
-                // Optional: Setze den Startpfad für den Dialog
-                // dialog.InitialDirectory = @"D:\Downloads\Sherlock Holmes - Die neuen Fälle";
 
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
@@ -304,10 +300,10 @@ namespace Mp3_Merger // Bitte hier den korrekten Namespace deines Projekts eintr
                 throw new InvalidOperationException($"Fehler beim Lesen des Formats der ersten MP3-Datei im Ordner '{currentFolderInfo.FolderName}': {ex.Message}");
             }
 
-            // ACHTUNG: Die Änderung ist HIER! Wir geben die Bitrate direkt an (z.B. 320 kbps)
-            // Damit umgehen wir das Problem mit LamePresets komplett.
+            // ACHTUNG: Wir geben die Bitrate direkt an (z.B. 320 kbps)
+            // Damit wird ein Problem mit LamePresets umgangen.
             // LameMP3FileWriter hat einen Konstruktor, der direkt die Bitrate (int) erwartet.
-            // 320 ist eine sehr gute Qualität für MP3s. Du könntest auch 192 oder 256 wählen.
+            // 320 ist eine sehr gute Qualität für MP3s. Man könnte auch 192 oder 256 wählen.
             using (var writer = new LameMP3FileWriter(outputFile, outputFormat, 320))
             {
                 for (int i = 0; i < inputFiles.Count; i++)
@@ -317,9 +313,7 @@ namespace Mp3_Merger // Bitte hier den korrekten Namespace deines Projekts eintr
                     {
                         using (var reader = new Mp3FileReader(inputFile))
                         {
-                            // Wir behalten die Formatprüfung bei, da Inkonsistenzen zu Problemen führen können.
-                            // NAudio.Lame kann zwar resamplen, aber bei MP3s mit unterschiedlichen Codecs/Bitraten
-                            // kann es zu Qualitätsproblemen oder Fehlern kommen, wenn man nicht explizit resampled.
+                            //Qualitätsprüfung der Datei
                             if (!reader.WaveFormat.Equals(outputFormat))
                             {
                                 throw new InvalidOperationException($"Die Datei '{Path.GetFileName(inputFile)}' im Ordner '{currentFolderInfo.FolderName}' hat ein inkompatibles Audioformat ({reader.WaveFormat}). Erwartet: {outputFormat}.");
