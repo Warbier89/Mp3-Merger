@@ -1,12 +1,62 @@
-﻿<Window x:Class="Mp3_Merger.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window x:Class="Mp3_Merger.MainWindow"         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Mp3_Merger"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        xmlns:local="clr-namespace:Mp3_Merger"   mc:Ignorable="d"
+        Title="MP3 Album Batch Merger" Height="650" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Wähle Album-Ordner aus, um alle MP3-Tracks darin zu einer einzigen Datei zusammenzufügen."
+                       FontSize="16" FontWeight="Bold" Margin="0,0,0,5"/>
+            <TextBlock Text="Jeder ausgewählte Ordner wird zu einer einzigen MP3-Datei verarbeitet."
+                       FontSize="12" FontStyle="Italic"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" BorderBrush="LightGray" BorderThickness="1" CornerRadius="3" Padding="5" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Button x:Name="btnAddFolder" Content="Album-Ordner hinzufügen..." Margin="5" Padding="10,5" Click="btnAddFolder_Click"/>
+                <Button x:Name="btnRemoveSelectedFolders" Content="Ausgewählte Ordner entfernen" Margin="5" Padding="10,5" Click="btnRemoveSelectedFolders_Click"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" BorderBrush="LightGray" BorderThickness="1" CornerRadius="3" Padding="5">
+            <ListBox x:Name="lstFolders" AllowDrop="True" Drop="lstFolders_Drop" DragOver="lstFolders_DragOver">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Index}" FontWeight="Bold" Width="30"/>
+                                <TextBlock Text="{Binding FolderName}" Margin="5,0,0,0" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding TrackCountText}" Margin="5,0,0,0" FontStyle="Italic" Foreground="Gray"/>
+                                <TextBlock Text="{Binding Status}" Margin="10,0,0,0" FontStyle="Italic" Foreground="{Binding StatusColor}"/>
+                                <TextBlock Text="{Binding FullPath}" Visibility="Collapsed"/>
+                            </StackPanel>
+                            <Expander Header="Details anzeigen" Margin="30,2,0,0" IsEnabled="{Binding Tracks.Count}" >
+                                <ItemsControl ItemsSource="{Binding Tracks}" Margin="0,5,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Margin="0,0,0,2" Foreground="DarkSlateGray" FontSize="11"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+            <ProgressBar x:Name="progressBarOverall" Height="20" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <TextBlock x:Name="txtStatusOverall" Text="Bereit zur Verarbeitung" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+            <Button x:Name="btnStartProcessing" Content="Alle ausgewählten Alben verarbeiten!" Margin="5" Padding="20,10" FontWeight="Bold" FontSize="18" Click="btnStartProcessing_Click"/>
+        </StackPanel>
     </Grid>
 </Window>
