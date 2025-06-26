@@ -120,9 +120,9 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="Wähle Album-Ordner aus, um alle MP3-Tracks darin zu einer einzigen Datei zusammenzufügen."
+            <TextBlock Text="Wähle Album-Ordner aus, um alle MP3-Tracks zu einer Mp3-Datei zusammenzufügen"
                        FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Foreground="#038387"/>
-            <TextBlock Text="Jeder ausgewählte Ordner wird zu einer einzigen MP3-Datei verarbeitet."
+            <TextBlock Text="Jeder aufgeführte Ordner wird zu einer einzigen MP3-Datei verarbeitet."
                        FontSize="14" FontStyle="Italic" Foreground="#DDDDDD"/>
         </StackPanel>
 
