@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.ComponentModel; // Für INotifyPropertyChanged
 using System.Windows.Media; // Für Farben im UI
 using Microsoft.WindowsAPICodePack.Dialogs; // Für CommonOpenFileDialog
+using System.Threading.Tasks; // Für Task.Run und Task.Delay
 
 namespace Mp3_Merger
 {
@@ -24,6 +25,12 @@ namespace Mp3_Merger
             InitializeComponent();
             FoldersToProcess = new ObservableCollection<FolderInfo>();
             lstFolders.ItemsSource = FoldersToProcess; // Binden der Liste an die ListBox
+
+            // Initialer Zustand des Status-Textes und der ProgressBar im Code
+            // Die Visibility="Collapsed" im XAML setzt den Startzustand.
+            // Hier könnten wir sie auch explizit setzen, aber XAML reicht aus.
+            // txtStatusOverall.Visibility = Visibility.Collapsed; 
+            // progressBarOverall.Visibility = Visibility.Collapsed;
         }
 
         // Hilfsklasse zum Speichern von Ordnerpfad und Status
@@ -94,7 +101,7 @@ namespace Mp3_Merger
                         case "Keine MP3-Dateien gefunden!": return Brushes.OrangeRed;
                         case "Überspringen (Datei existiert)": return Brushes.Gray;
                         case "Scanne MP3s...": return Brushes.Orange;
-                        default: return Brushes.Black;
+                        default: return Brushes.LightGray; // Angepasst an neues Farbschema (anstatt Black auf Schwarz)
                     }
                 }
             }
@@ -219,18 +226,39 @@ namespace Mp3_Merger
                 return;
             }
 
+            // Sicherstellen, dass ProgressBar und Status-Text sichtbar sind
             progressBarOverall.Visibility = Visibility.Visible;
-            progressBarOverall.Value = 0;
-            txtStatusOverall.Text = "Verarbeitung gestartet...";
+            txtStatusOverall.Visibility = Visibility.Visible;
+
+            txtStatusOverall.Text = "Verarbeitung gestartet..."; // Initialer Status-Text
+
+            // Deaktiviere alle relevanten Buttons während der Verarbeitung
             btnStartProcessing.IsEnabled = false;
+            btnAddFolder.IsEnabled = false;
+            btnRemoveSelectedFolders.IsEnabled = false;
+
+            progressBarOverall.Maximum = FoldersToProcess.Count;
+            progressBarOverall.Value = 0;
 
             int processedCount = 0;
-            foreach (var folderInfo in FoldersToProcess)
+            // Erstelle eine Kopie der Liste, um Modifikationen während der Iteration zu vermeiden
+            foreach (var folderInfo in FoldersToProcess.ToList())
             {
+                // Aktualisiere den globalen Status-Text und ProgressBar
+                Dispatcher.Invoke(() =>
+                {
+                    txtStatusOverall.Text = $"Verarbeite: {processedCount + 1}/{FoldersToProcess.Count} Alben. Aktueller Ordner: {folderInfo.FolderName}";
+                    progressBarOverall.Value = processedCount; // Aktualisiere den Fortschritt VOR der Verarbeitung des aktuellen Ordners
+                });
+
+
                 if (folderInfo.Tracks == null || folderInfo.Tracks.Count == 0)
                 {
                     folderInfo.Status = "Fehler: Keine Tracks gefunden oder noch nicht gescannt!";
                     processedCount++;
+                    // Aktualisiere UI sofort, wenn ein Ordner übersprungen wird
+                    Dispatcher.Invoke(() => lstFolders.Items.Refresh());
+                    await Task.Delay(50); // Kleine Pause für UI-Update
                     continue;
                 }
 
@@ -251,6 +279,9 @@ namespace Mp3_Merger
                     {
                         folderInfo.Status = "Überspringen (Datei existiert)";
                         processedCount++;
+                        // Aktualisiere UI sofort, wenn ein Ordner übersprungen wird
+                        Dispatcher.Invoke(() => lstFolders.Items.Refresh());
+                        await Task.Delay(50); // Kleine Pause für UI-Update
                         continue;
                     }
                 }
@@ -258,30 +289,59 @@ namespace Mp3_Merger
                 try
                 {
                     folderInfo.Status = "Verarbeite...";
+                    // Aktualisiere UI (ListBox) sofort, damit der Status "Verarbeite..." sichtbar wird
+                    Dispatcher.Invoke(() => lstFolders.Items.Refresh());
+                    await Task.Delay(50); // Kleine Pause für UI-Update
+
                     await System.Threading.Tasks.Task.Run(() => MergeMp3Files(actualMp3FilePaths, outputPath, folderInfo));
                     folderInfo.Status = "Erfolgreich";
                 }
                 catch (Exception ex)
                 {
                     folderInfo.Status = $"Fehler: {ex.Message}";
+                    // Optional: Zeige detailliertere Fehlermeldung an
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show($"Fehler beim Verarbeiten von '{folderInfo.FolderName}': {ex.Message}", "Verarbeitungsfehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
                 }
                 finally
                 {
                     processedCount++;
+                    // Aktualisiere UI (ListBox) und ProgressBar
                     Dispatcher.Invoke(() =>
                     {
-                        progressBarOverall.Value = (double)processedCount / FoldersToProcess.Count * 100;
-                        txtStatusOverall.Text = $"Verarbeitet: {processedCount}/{FoldersToProcess.Count} Alben. Aktueller Ordner: {folderInfo.FolderName}";
+                        lstFolders.Items.Refresh(); // Stellt sicher, dass die Status-Farben und Texte in der Liste aktualisiert werden
+                        progressBarOverall.Value = processedCount; // ProgressBar auf aktuellen Stand bringen
                     });
                 }
             }
 
-            txtStatusOverall.Text = "Alle ausgewählten Alben verarbeitet!";
-            progressBarOverall.Value = 100;
-            MessageBox.Show("Alle ausgewählten Alben wurden verarbeitet.", "Verarbeitung abgeschlossen", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Nach Abschluss aller Verarbeitungen
+            txtStatusOverall.Text = "Alle aufgeführten Alben erfolgreich verarbeitet!"; // Finaler Erfolgs-Text
+            progressBarOverall.Value = progressBarOverall.Maximum; // Sicherstellen, dass ProgressBar 100% anzeigt
 
-            progressBarOverall.Visibility = Visibility.Collapsed;
+            // Optional: Message Box nur anzeigen, wenn es keine Fehler gab
+            bool allSuccessful = FoldersToProcess.All(f => f.Status == "Erfolgreich" || f.Status == "Überspringen (Datei existiert)");
+            if (allSuccessful)
+            {
+                MessageBox.Show("Alle aufgeführten Alben wurden erfolgreich verarbeitet.", "Verarbeitung abgeschlossen", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Die Verarbeitung wurde abgeschlossen. Einige Alben wurden mit Fehlern verarbeitet oder übersprungen. Details siehe Liste.", "Verarbeitung abgeschlossen", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+
+            // Buttons wieder aktivieren
             btnStartProcessing.IsEnabled = true;
+            btnAddFolder.IsEnabled = true;
+            btnRemoveSelectedFolders.IsEnabled = true;
+
+            // Optional: ProgressBar und Status-Text nach einer kurzen Verzögerung ausblenden
+            // await Task.Delay(3000); // Warte 3 Sekunden
+            // progressBarOverall.Visibility = Visibility.Collapsed;
+            // txtStatusOverall.Visibility = Visibility.Collapsed;
         }
 
         private void MergeMp3Files(List<string> inputFiles, string outputFile, FolderInfo currentFolderInfo)

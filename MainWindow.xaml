@@ -18,7 +18,7 @@
             <Setter Property="Foreground" Value="#F9F9F9"/>
             <Setter Property="BorderBrush" Value="#038387"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="Padding" Value="25,12"/>
             <Setter Property="Margin" Value="8"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -27,7 +27,7 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="12">
+                                CornerRadius="16">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -128,8 +128,8 @@
 
         <Border Grid.Row="1" Padding="10" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <Button x:Name="btnAddFolder" Content="Album-Ordner hinzufügen..." Click="btnAddFolder_Click" Height="32" Width="200"/>
-                <Button x:Name="btnRemoveSelectedFolders" Content="Ausgewählte Ordner entfernen" Click="btnRemoveSelectedFolders_Click" Width="228"/>
+                <Button x:Name="btnAddFolder" Content="Album-Ordner hinzufügen..." Click="btnAddFolder_Click" Height="40" Width="220"/>
+                <Button x:Name="btnRemoveSelectedFolders" Content="Ausgewählte Ordner entfernen" Click="btnRemoveSelectedFolders_Click" Height="40" Width="250"/>
             </StackPanel>
         </Border>
 
@@ -140,7 +140,7 @@
                         <StackPanel Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding Index}" FontWeight="Bold" Width="35" Foreground="#038387"/>
-                                <TextBlock Text="{Binding FolderName}" Margin="8,0,0,0" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding FolderName}" Margin="8,0,0,0" FontWeight="SemiBold" Foreground="#DDDDDD"/>
                                 <TextBlock Text="{Binding TrackCountText}" Margin="8,0,0,0" FontStyle="Italic" Foreground="#AAAAAA"/>
                                 <TextBlock Text="{Binding Status}" Margin="12,0,0,0" FontStyle="Italic" Foreground="{Binding StatusColor}"/>
                                 <TextBlock Text="{Binding FullPath}" Visibility="Collapsed"/>
@@ -162,7 +162,12 @@
 
         <StackPanel Grid.Row="3" Margin="0,20,0,0">
             <ProgressBar x:Name="progressBarOverall" Height="30" Margin="0,0,0,20" Visibility="Collapsed"/>
-            <TextBlock x:Name="txtStatusOverall" Text="Bereit zur Verarbeitung" HorizontalAlignment="Center" Margin="0,0,0,20" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock x:Name="txtStatusOverall"
+                       Text="Bereit zur Verarbeitung"
+                       HorizontalAlignment="Left"          Margin="0,0,0,20"
+                       FontSize="14"                     FontWeight="SemiBold"
+                       Visibility="Collapsed"
+                       TextWrapping="Wrap"                 VerticalAlignment="Top"/>
             <Button x:Name="btnStartProcessing" Content="Alle aufgeführten Alben verarbeiten!" Padding="30,15" FontWeight="Bold" FontSize="22" Click="btnStartProcessing_Click"/>
         </StackPanel>
     </Grid>
