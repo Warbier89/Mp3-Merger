@@ -20,6 +20,9 @@ namespace Mp3_Merger
         // ObservableCollection für die Liste der Album-Ordner
         public ObservableCollection<FolderInfo> FoldersToProcess { get; set; }
 
+        // NEU: Variable zum Speichern des zuletzt ausgewählten übergeordneten Ordners
+        private string _lastSelectedParentFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic); // Standardwert
+
         public MainWindow()
         {
             InitializeComponent();
@@ -121,6 +124,16 @@ namespace Mp3_Merger
             using (var dialog = new CommonOpenFileDialog())
             {
                 dialog.IsFolderPicker = true;
+                // NEU: Setze den Startordner basierend auf dem zuletzt ausgewählten übergeordneten Pfad
+                if (!string.IsNullOrEmpty(_lastSelectedParentFolder) && Directory.Exists(_lastSelectedParentFolder))
+                {
+                    dialog.InitialDirectory = _lastSelectedParentFolder;
+                }
+                else
+                {
+                    // Fallback, falls der gespeicherte Pfad ungültig ist
+                    dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                }
 
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
@@ -132,6 +145,9 @@ namespace Mp3_Merger
                         UpdateFolderIndexes();
 
                         await System.Threading.Tasks.Task.Run(() => ScanFolderForMp3s(newFolderInfo));
+
+                        // NEU: Speichere den übergeordneten Ordner des gerade ausgewählten Ordners
+                        _lastSelectedParentFolder = Path.GetDirectoryName(selectedFolder);
                     }
                 }
             }
@@ -199,6 +215,8 @@ namespace Mp3_Merger
                             FoldersToProcess.Add(newFolderInfo);
                             UpdateFolderIndexes();
                             await System.Threading.Tasks.Task.Run(() => ScanFolderForMp3s(newFolderInfo));
+                            // NEU: Auch hier den übergeordneten Ordner des hinzugefügten Ordners merken
+                            _lastSelectedParentFolder = Path.GetDirectoryName(itemPath);
                         }
                     }
                 }
@@ -238,7 +256,6 @@ namespace Mp3_Merger
             int processedFolderCount = 0; // Zählt die komplett verarbeiteten Ordner
 
             // Erstelle eine Kopie der Liste, um Modifikationen während der Iteration zu vermeiden
-            // (Obwohl wir keine Elemente entfernen, ist es gute Praxis bei async-Operationen)
             foreach (var folderInfo in FoldersToProcess.ToList())
             {
                 // Update des Haupt-Status für den aktuellen Ordner
@@ -372,8 +389,6 @@ namespace Mp3_Merger
                     try
                     {
                         // Fortschritt melden
-                        // "% der Tracks innerhalb dieses Albums"
-                        // Aktueller Track X von Y: "Name des Tracks"
                         string statusMessage = $"Album {currentFolderInfo.FolderName}: Track {i + 1}/{inputFiles.Count} - {Path.GetFileName(inputFile)} wird gemerged...";
                         progress.Report(statusMessage);
 
